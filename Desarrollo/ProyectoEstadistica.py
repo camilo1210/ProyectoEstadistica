@@ -5,10 +5,10 @@ import seaborn as sns
 
 #==================================================================================================
 # Cargar el archivo de Excel
-file_path_Ventas = '/home/camilo/UNIVALLE/SEMESTRE 4/ESTADISTICA/proyecto estadistica/datos Informe de ventas Pan & Arte Yumbo.xlsx'
+file_path_Ventas = '/home/camilo/UNIVALLE/SEMESTRE 4/ESTADISTICA/proyecto estadistica/ProyectoEstadistica/Desarrollo/datos Informe de ventas Pan & Arte Yumbo.xlsx'
 ventas_df = pd.read_excel(file_path_Ventas, sheet_name='Datos de ventas', skiprows=1)
 
-file_path_Desperdicios ='/home/camilo/UNIVALLE/SEMESTRE 4/ESTADISTICA/proyecto estadistica/devoluciones_pan.xlsx'
+file_path_Desperdicios ='/home/camilo/UNIVALLE/SEMESTRE 4/ESTADISTICA/proyecto estadistica/ProyectoEstadistica/Desarrollo/devoluciones_pan.xlsx'
 desperdicio_df = pd.read_excel(file_path_Desperdicios, sheet_name='Datos de desperdicio', skiprows=0)
 #==================================================================================================
 
