@@ -1,22 +1,39 @@
+import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
 
-# Configurar los datos para la gráfica
-referencias = df["Referencia"][:-1]  # Excluir la fila "Total"
-produccion_total = df["Total Producción"][:-1]
-perdida_total = df["Total pérdida"][:-1]
+# Datos ficticios para referencia
+data_barras = {
+    "Referencia": ["Ref1", "Ref2", "Ref3", "Ref4", "Ref5"],
+    "Total Producción": [1000, 800, 950, 1100, 900],
+    "Total pérdida": [50, 60, 40, 70, 80]
+}
 
-# Crear la gráfica de barras para producción y pérdida total
+# Crear DataFrame
+df_barras = pd.DataFrame(data_barras)
+
+# Configurar posiciones para las barras
+x = np.arange(len(df_barras["Referencia"]))  # Rango de posiciones
+ancho = 0.4  # Ancho de las barras
+
+# Crear gráfica de barras
 plt.figure(figsize=(10, 6))
-plt.bar(referencias, produccion_total, color='blue', label="Producción Total")
-plt.bar(referencias, perdida_total, color='red', label="Pérdida Total")
+plt.bar(x - ancho / 2, df_barras["Total Producción"], width=ancho, color='blue', label="Producción Total")
+plt.bar(x + ancho / 2, df_barras["Total pérdida"], width=ancho, color='red', label="Pérdida Total")
 
-# Añadir etiquetas y título
+# Añadir etiquetas de porcentaje de pérdida encima de las barras
+for i in range(len(df_barras)):
+    perdida_pct = (df_barras["Total pérdida"][i] / df_barras["Total Producción"][i]) * 100
+    plt.text(x[i] + ancho / 2, df_barras["Total pérdida"][i] + 5, f"{perdida_pct:.1f}%", 
+             ha='center', fontsize=9, color='red')
+
+# Configurar etiquetas y título
 plt.xlabel("Referencia")
 plt.ylabel("Unidades")
-plt.title("Producción Total vs Pérdida Total por Referencia")
+plt.title("Producción Total vs. Pérdida Total por Referencia")
+plt.xticks(x, df_barras["Referencia"])  # Etiquetas en el eje X
 plt.legend()
 
-# Mostrar la gráfica
-plt.xticks(rotation=45)
+# Ajustar diseño y mostrar gráfica
 plt.tight_layout()
 plt.show()

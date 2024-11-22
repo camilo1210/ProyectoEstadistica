@@ -2,99 +2,128 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-
-#==================================================================================================
-# Cargar el archivo de Excel
-file_path_Ventas = '/home/camilo/UNIVALLE/SEMESTRE 4/ESTADISTICA/proyecto estadistica/ProyectoEstadistica/Desarrollo/datos Informe de ventas Pan & Arte Yumbo.xlsx'
-ventas_df = pd.read_excel(file_path_Ventas, sheet_name='Datos de ventas', skiprows=1)
-
-file_path_Desperdicios ='/home/camilo/UNIVALLE/SEMESTRE 4/ESTADISTICA/proyecto estadistica/ProyectoEstadistica/Desarrollo/devoluciones_pan.xlsx'
-desperdicio_df = pd.read_excel(file_path_Desperdicios, sheet_name='Datos de desperdicio', skiprows=0)
-#==================================================================================================
+import tkinter as tk
+from tkinter import ttk, messagebox
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 
-#==================================================================================================
-# Extraer datos para cálculos de desperdicio y ventas
-ventas = ventas_df['Total']
-desperdicio = desperdicio_df['Cantidad']
+# ==============================
+# Función para cargar datos
+# ==============================
+def cargar_datos():
+    try:
+        # Cargar ventas
+        file_path_ventas = 'Desarrollo/datos Informe de ventas Pan & Arte Yumbo.xlsx'
+        ventas_df = pd.read_excel(file_path_ventas, sheet_name='Datos de ventas', skiprows=1)
+
+        # Cargar desperdicios
+        file_path_desperdicios = 'Desarrollo/devoluciones_pan.xlsx'
+        desperdicio_df = pd.read_excel(file_path_desperdicios, sheet_name='Datos de desperdicio', skiprows=0)
+
+        # Procesar datos
+        ventas_df.dropna(subset=['Total'], inplace=True)
+        desperdicio_df.dropna(subset=['Causas de devolucion'], inplace=True)
+        ventas_df.columns = ['Index', 'Producto', 'Cliente', '1er_trim', '2do_trim', '3er_trim', '4to_trim', 'Total', 'Extra']
+        desperdicio_df.columns = ['Causas de devolucion', '%', 'Cantidad']
+        ventas_df = ventas_df.drop(columns=['Index', 'Extra'])
+        ventas_df[['1er_trim', '2do_trim', '3er_trim', '4to_trim', 'Total']] = ventas_df[
+            ['1er_trim', '2do_trim', '3er_trim', '4to_trim', 'Total']].apply(pd.to_numeric, errors='coerce')
+        ventas_df = ventas_df[ventas_df['Total'] > 0]
+
+        return ventas_df, desperdicio_df
+    except Exception as e:
+        messagebox.showerror("Error", f"No se pudieron cargar los datos: {e}")
+        return None, None
 
 
+# ==============================
+# Función para calcular métricas
+# ==============================
+def calcular_metricas(ventas_df, desperdicio_df):
+    ventas = ventas_df['Total']
+    desperdicio = desperdicio_df['Cantidad']
 
-#mirar Columnas vacias
-ventas_df.dropna(subset=['Total'], inplace=True)
-desperdicio_df.dropna(subset=['Causas de devolucion'], inplace=True)
+    # Calcular estadísticas
+    promedios = ventas_df[['1er_trim', '2do_trim', '3er_trim', '4to_trim', 'Total']].mean()
+    desviaciones = ventas_df[['1er_trim', '2do_trim', '3er_trim', '4to_trim', 'Total']].std()
+    porcentajes = ventas_df[['1er_trim', '2do_trim', '3er_trim', '4to_trim']].div(ventas_df['Total'], axis=0) * 100
+    porcentajes_medios = porcentajes.mean()
+    porcentaje_desperdicio = (desperdicio / ventas) * 100
+
+    return {
+        "promedios": promedios,
+        "desviaciones": desviaciones,
+        "porcentajes_medios": porcentajes_medios,
+        "ventas_promedio": ventas.mean(),
+        "ventas_mediana": ventas.median(),
+        "ventas_std": ventas.std(),
+        "ventas_rango": ventas.max() - ventas.min(),
+        "desperdicio_promedio": desperdicio.mean(),
+        "desperdicio_mediana": desperdicio.median(),
+        "desperdicio_std": desperdicio.std(),
+        "desperdicio_rango": desperdicio.max() - desperdicio.min(),
+        "porcentaje_desperdicio_promedio": porcentaje_desperdicio.mean(),
+        "porcentaje_desperdicio": porcentaje_desperdicio,
+    }
 
 
-# Renombrar columnas para simplificar (ajusta según el formato de las hojas)
-ventas_df.columns = ['Index', 'Producto', 'Cliente', '1er_trim', '2do_trim', '3er_trim', '4to_trim', 'Total', 'Extra']
-desperdicio_df.columns = ['Causas de devolucion', '%', 'Cantidad']
+# ==============================
+# Funciones para la GUI
+# ==============================
+def mostrar_resultados(metrics):
+    resultados = f"""
+    Promedio de Ventas por Trimestre y Total:
+    {metrics["promedios"]}
+    
+    Desviación Estándar de Ventas por Trimestre y Total:
+    {metrics["desviaciones"]}
+    
+    Porcentaje Promedio de Ventas de cada Trimestre respecto al Total:
+    {metrics["porcentajes_medios"]}
+    
+    Estadísticas de Ventas:
+    Promedio: {metrics["ventas_promedio"]}
+    Mediana: {metrics["ventas_mediana"]}
+    Desviación Estándar: {metrics["ventas_std"]}
+    Rango: {metrics["ventas_rango"]}
+    
+    Estadísticas de Desperdicio:
+    Promedio: {metrics["desperdicio_promedio"]}
+    Mediana: {metrics["desperdicio_mediana"]}
+    Desviación Estándar: {metrics["desperdicio_std"]}
+    Rango: {metrics["desperdicio_rango"]}
+    Promedio del Porcentaje de Desperdicio: {metrics["porcentaje_desperdicio_promedio"]}%
+    """
+    messagebox.showinfo("Resultados Estadísticos", resultados)
 
-# Eliminar columnas innecesarias
-ventas_df = ventas_df.drop(columns=['Index', 'Extra'])
 
-# Convertir columnas a numérico
-ventas_df[['1er_trim', '2do_trim', '3er_trim', '4to_trim', 'Total']] = ventas_df[
-    ['1er_trim', '2do_trim', '3er_trim', '4to_trim', 'Total']].apply(pd.to_numeric, errors='coerce')
+def graficar_distribucion(metrics, frame):
+    fig, ax = plt.subplots(figsize=(8, 4))
+    sns.histplot(metrics["porcentaje_desperdicio"], kde=True, color='purple', ax=ax)
+    ax.set_title("Distribución del Porcentaje de Desperdicio")
+    ax.set_xlabel("Porcentaje de Desperdicio")
+    ax.set_ylabel("Frecuencia")
 
-# Filtrar filas con Total > 0 para evitar divisiones por cero
-ventas_df = ventas_df[ventas_df['Total'] > 0]
-#==================================================================================================
+    canvas = FigureCanvasTkAgg(fig, frame)
+    canvas.get_tk_widget().pack()
+    canvas.draw()
 
-#==================================================================================================
-# Cálculo de métricas para ventas por trimestre y total
-promedios = ventas_df[['1er_trim', '2do_trim', '3er_trim', '4to_trim', 'Total']].mean()
-desviaciones = ventas_df[['1er_trim', '2do_trim', '3er_trim', '4to_trim', 'Total']].std()
 
-# Calcular el porcentaje de ventas de cada trimestre respecto al total
-porcentajes = ventas_df[['1er_trim', '2do_trim', '3er_trim', '4to_trim']].div(ventas_df['Total'], axis=0) * 100
-porcentajes_medios = porcentajes.mean()
+# ==============================
+# Configuración de la GUI
+# ==============================
+ventas_df, desperdicio_df = cargar_datos()
+metrics = calcular_metricas(ventas_df, desperdicio_df) if ventas_df is not None else None
 
-# Calcular estadísticas para ventas
-ventas_promedio = ventas.mean()
-ventas_mediana = ventas.median()
-ventas_desviacion_std = ventas.std()
-ventas_rango = ventas.max() - ventas.min()
+ventana = tk.Tk()
+ventana.title("Proyecto Estadística")
+ventana.geometry("800x600")
 
-# Calcular estadísticas para desperdicio
-desperdicio_promedio = desperdicio.mean()
-desperdicio_mediana = desperdicio.median()
-desperdicio_desviacion_std = desperdicio.std()
-desperdicio_rango = desperdicio.max() - desperdicio.min()
+frame_grafico = tk.Frame(ventana)
+frame_grafico.pack(fill="both", expand=True)
 
-# Calcular el porcentaje de desperdicio en relación con las ventas
-porcentaje_desperdicio = (desperdicio / ventas) * 100
-porcentaje_desperdicio_promedio = porcentaje_desperdicio.mean()
-#==================================================================================================
+tk.Button(ventana, text="Mostrar Resultados", command=lambda: mostrar_resultados(metrics), bg="blue", fg="white").pack(pady=5)
+tk.Button(ventana, text="Mostrar Gráfico", command=lambda: graficar_distribucion(metrics, frame_grafico), bg="green", fg="white").pack(pady=5)
 
-#==================================================================================================
-# Mostrar resultados
-print("Promedio de Ventas por Trimestre y Total:")
-print(promedios)
-
-print("\nDesviación Estándar de Ventas por Trimestre y Total:")
-print(desviaciones)
-
-print("\nPorcentaje Promedio de Ventas de cada Trimestre respecto al Total:")
-print(porcentajes_medios)
-
-print("\nEstadísticas de Ventas:")
-print(f"Promedio: {ventas_promedio}")
-print(f"Mediana: {ventas_mediana}")
-print(f"Desviación Estándar: {ventas_desviacion_std}")
-print(f"Rango: {ventas_rango}")
-
-print("\nEstadísticas de Desperdicio:")
-print(f"Promedio: {desperdicio_promedio}")
-print(f"Mediana: {desperdicio_mediana}")
-print(f"Desviación Estándar: {desperdicio_desviacion_std}")
-print(f"Rango: {desperdicio_rango}")
-print(f"Promedio del Porcentaje de Desperdicio: {porcentaje_desperdicio_promedio}%")
-
-# Visualización de la distribución del porcentaje de desperdicio
-plt.figure(figsize=(10, 5))
-sns.histplot(porcentaje_desperdicio, kde=True, color='purple')
-plt.title("Distribución del Porcentaje de Desperdicio")
-plt.xlabel("Porcentaje de Desperdicio")
-plt.ylabel("Frecuencia")
-plt.show()
+ventana.mainloop()
 

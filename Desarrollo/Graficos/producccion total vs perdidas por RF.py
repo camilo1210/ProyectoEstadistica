@@ -14,7 +14,7 @@ data = {
 df = pd.DataFrame(data)
 
 # Guardar el DataFrame como archivo CSV
-csv_path = "/mnt/data/analisis_produccion.csv"
+csv_path = "/home/camilo/analisis_produccion.csv"
 df.to_csv(csv_path, index=False)
 
 # Ahora realizamos un análisis básico de las pérdidas y porcentajes
