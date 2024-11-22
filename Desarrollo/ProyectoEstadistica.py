@@ -1,10 +1,6 @@
 import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
 import tkinter as tk
-from tkinter import ttk, messagebox
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from tkinter import messagebox
 
 
 # ==============================
@@ -16,7 +12,7 @@ def cargar_datos():
         file_path_ventas = 'Desarrollo/datos Informe de ventas Pan & Arte Yumbo.xlsx'
         ventas_df = pd.read_excel(file_path_ventas, sheet_name='Datos de ventas', skiprows=1)
 
-        # Cargar desperdicios
+        # Cargar desperdicios (causas de devolución)
         file_path_desperdicios = 'Desarrollo/devoluciones_pan.xlsx'
         desperdicio_df = pd.read_excel(file_path_desperdicios, sheet_name='Datos de desperdicio', skiprows=0)
 
@@ -63,50 +59,61 @@ def calcular_metricas(ventas_df, desperdicio_df):
         "desperdicio_std": desperdicio.std(),
         "desperdicio_rango": desperdicio.max() - desperdicio.min(),
         "porcentaje_desperdicio_promedio": porcentaje_desperdicio.mean(),
-        "porcentaje_desperdicio": porcentaje_desperdicio,
     }
 
 
 # ==============================
-# Funciones para la GUI
+# Función para mostrar resultados
 # ==============================
 def mostrar_resultados(metrics):
     resultados = f"""
-    Promedio de Ventas por Trimestre y Total:
-    {metrics["promedios"]}
-    
-    Desviación Estándar de Ventas por Trimestre y Total:
-    {metrics["desviaciones"]}
-    
-    Porcentaje Promedio de Ventas de cada Trimestre respecto al Total:
-    {metrics["porcentajes_medios"]}
-    
-    Estadísticas de Ventas:
-    Promedio: {metrics["ventas_promedio"]}
-    Mediana: {metrics["ventas_mediana"]}
-    Desviación Estándar: {metrics["ventas_std"]}
-    Rango: {metrics["ventas_rango"]}
-    
-    Estadísticas de Desperdicio:
-    Promedio: {metrics["desperdicio_promedio"]}
-    Mediana: {metrics["desperdicio_mediana"]}
-    Desviación Estándar: {metrics["desperdicio_std"]}
-    Rango: {metrics["desperdicio_rango"]}
-    Promedio del Porcentaje de Desperdicio: {metrics["porcentaje_desperdicio_promedio"]}%
+    ====================================
+             RESULTADOS ESTADÍSTICOS
+    ====================================
+
+    PROMEDIOS DE VENTAS POR TRIMESTRE:
+        1er Trimestre:    {metrics["promedios"]["1er_trim"]:.2f}
+        2do Trimestre:    {metrics["promedios"]["2do_trim"]:.2f}
+        3er Trimestre:    {metrics["promedios"]["3er_trim"]:.2f}
+        4to Trimestre:    {metrics["promedios"]["4to_trim"]:.2f}
+        Total:            {metrics["promedios"]["Total"]:.2f}
+
+    DESVIACIÓN ESTÁNDAR DE VENTAS POR TRIMESTRE:
+        1er Trimestre:    {metrics["desviaciones"]["1er_trim"]:.2f}
+        2do Trimestre:    {metrics["desviaciones"]["2do_trim"]:.2f}
+        3er Trimestre:    {metrics["desviaciones"]["3er_trim"]:.2f}
+        4to Trimestre:    {metrics["desviaciones"]["4to_trim"]:.2f}
+        Total:            {metrics["desviaciones"]["Total"]:.2f}
+
+    PORCENTAJE PROMEDIO DE VENTAS POR TRIMESTRE RESPECTO AL TOTAL:
+        1er Trimestre:    {metrics["porcentajes_medios"]["1er_trim"]:.2f}%
+        2do Trimestre:    {metrics["porcentajes_medios"]["2do_trim"]:.2f}%
+        3er Trimestre:    {metrics["porcentajes_medios"]["3er_trim"]:.2f}%
+        4to Trimestre:    {metrics["porcentajes_medios"]["4to_trim"]:.2f}%
+
+    ====================================
+               ESTADÍSTICAS GLOBALES
+    ====================================
+
+    ESTADÍSTICAS DE VENTAS:
+        Promedio:         {metrics["ventas_promedio"]:.2f}
+        Mediana:          {metrics["ventas_mediana"]:.2f}
+        Desviación Std.:  {metrics["ventas_std"]:.2f}
+        Rango:            {metrics["ventas_rango"]:.2f}
+
+    ESTADÍSTICAS DE DESPERDICIO:
+        Promedio:         {metrics["desperdicio_promedio"]:.2f}
+        Mediana:          {metrics["desperdicio_mediana"]:.2f}
+        Desviación Std.:  {metrics["desperdicio_std"]:.2f}
+        Rango:            {metrics["desperdicio_rango"]:.2f}
+
+    PORCENTAJE PROMEDIO DE DESPERDICIO:
+        {metrics["porcentaje_desperdicio_promedio"]:.2f}%
+
+    ====================================
     """
-    messagebox.showinfo("Resultados Estadísticos", resultados)
-
-
-def graficar_distribucion(metrics, frame):
-    fig, ax = plt.subplots(figsize=(8, 4))
-    sns.histplot(metrics["porcentaje_desperdicio"], kde=True, color='purple', ax=ax)
-    ax.set_title("Distribución del Porcentaje de Desperdicio")
-    ax.set_xlabel("Porcentaje de Desperdicio")
-    ax.set_ylabel("Frecuencia")
-
-    canvas = FigureCanvasTkAgg(fig, frame)
-    canvas.get_tk_widget().pack()
-    canvas.draw()
+    text_resultados.delete("1.0", tk.END)  # Limpiar el cuadro de texto
+    text_resultados.insert(tk.END, resultados)  # Mostrar los resultados
 
 
 # ==============================
@@ -119,11 +126,11 @@ ventana = tk.Tk()
 ventana.title("Proyecto Estadística")
 ventana.geometry("800x600")
 
-frame_grafico = tk.Frame(ventana)
-frame_grafico.pack(fill="both", expand=True)
+# Cuadro de texto para mostrar resultados
+text_resultados = tk.Text(ventana, wrap="word", font=("Courier New", 12), bg="white", fg="black")
+text_resultados.pack(expand=True, fill="both", padx=10, pady=10)
 
-tk.Button(ventana, text="Mostrar Resultados", command=lambda: mostrar_resultados(metrics), bg="blue", fg="white").pack(pady=5)
-tk.Button(ventana, text="Mostrar Gráfico", command=lambda: graficar_distribucion(metrics, frame_grafico), bg="green", fg="white").pack(pady=5)
+if metrics:
+    mostrar_resultados(metrics)
 
 ventana.mainloop()
-
